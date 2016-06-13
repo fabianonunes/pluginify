@@ -6,14 +6,23 @@ module.exports = function (pluginName, factory) {
 
   $.fn[pluginName] = function (optionsOrMethod) {
     var args = slice.call(arguments, 1)
-    return this.each(function () {
+    var firstOnly
+    var methodResult
+    var each = this.each(function () {
       var plugin = $.data(this, 'plugin-' + pluginName)
       if (!plugin) {
         $.data(this, 'plugin-' + pluginName, factory(this, optionsOrMethod))
       } else if (plugin[optionsOrMethod]) {
-        plugin[optionsOrMethod].apply(plugin, args)
+        methodResult = plugin[optionsOrMethod].apply(plugin, args)
+        if (methodResult !== this) {
+          firstOnly = true
+          return false
+        }
       }
+      return this
     })
+
+    return firstOnly ? methodResult : each
   }
 
   $.fn[pluginName].factory = factory
